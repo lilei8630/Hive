@@ -1,0 +1,4 @@
+//创建site-segment表
+create table site_segment(site string,segment string) row format delimited fields terminated by '\t' stored as textfile;
+//向site_segment表添加数据,500G左右
+load data local inpath '/search/odin/lilei/segment/site_query_segment_0000_utf8' into table site_segment;
