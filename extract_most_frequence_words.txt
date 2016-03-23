@@ -1,4 +1,9 @@
 //创建site-segment表
-create table site_segment(site string,segment string) row format delimited fields terminated by '\t' stored as textfile;
+create table site_segment(site string,segment string) partitioned by (part string) row format delimited fields terminated by '\t' stored as textfile;
 //向site_segment表添加数据,500G左右
-load data local inpath '/search/odin/lilei/segment/site_query_segment_0000_utf8' into table site_segment;
+load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0000_utf8' into table site_segment partition (part='0000');
+load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0001_utf8' into table site_segment partition (part='0001');
+load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0002_utf8' into table site_segment partition (part='0002');
+//将site_word_count_rm_stopwords列转行
+set hive.map.aggr = false;
+create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_rm_stopwords group by site;
