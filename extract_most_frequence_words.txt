@@ -8,6 +8,8 @@ load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0002
 create table site_word_1 as select site,word from site_segment lateral view explode(split(trim(segment),' ')) segment as word;
 //保留site_word_1词长大于1的
 create table site_word_2 as select site,word from site_word_1 where length(word)>1;
+//将site为空、edu.cn、com.cn的过滤掉
+create table site_word_3 as select site,word from site_word_2 where site !='' and site != 'com.cn' and site != 'edu.cn';
 //将site_word_count_rm_stopwords列转行
 set hive.map.aggr = false;
 create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_rm_stopwords group by site;
