@@ -21,6 +21,14 @@ create table site_word_count_2 as select a.site,a.word,a.count from site_word_co
 create table site_word_count_top5 as select site,word,count from (select site,word,count,row_number() over (distribute by site sort by count desc ) row_num from site_word_count_2) aa where aa.row_num <=5;
 //将列转行,生成最终结果集
 create table site_wordList as select site,concat_ws(',',collect_set(word)) as wordList from site_word_count_top5 group by site;
+//将非法site过滤
+create table site_wordList_2 select site,wordList from site_wordList where site rlike '^[0-9a-z]+.[a-z]+$';
+//将site_wordList随机采样100行(每个Map采样100)左右,效果不太好
+//create table site_wordList_sample as select site,wordList from site_wordList_2 tablesample(50 rows);
+//使用rand()来进行随机抽样
+create table site_wordList_sample as select site,wordList from ( select site, wordList,cast(rand() * 3000000 as int) as idx from site_wordList_2 order by idx) vt limit 200;
+//将样本文件输出到本地
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample.txt' select site,wordList from site_wordList_sample;
 //将site_word_count_rm_stopwords列转行
 set hive.map.aggr = false;
 create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_rm_stopwords group by site;
