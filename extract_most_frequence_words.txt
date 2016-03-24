@@ -28,7 +28,7 @@ create table site_wordList_2 select site,wordList from site_wordList where site 
 //使用rand()来进行随机抽样
 create table site_wordList_sample as select site,wordList from ( select site, wordList,cast(rand() * 3000000 as int) as idx from site_wordList_2 order by idx) vt limit 200;
 //将样本文件输出到本地
-INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample.txt' select site,wordList from site_wordList_sample;
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample' row format delimited fields terminated by '\t' select site,wordList from site_wordList_sample;
 //将site_word_count_rm_stopwords列转行
 set hive.map.aggr = false;
 create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_rm_stopwords group by site;
