@@ -4,6 +4,8 @@ create table site_segment(site string,segment string) partitioned by (part strin
 load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0000_utf8' into table site_segment partition (part='0000');
 load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0001_utf8' into table site_segment partition (part='0001');
 load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0002_utf8' into table site_segment partition (part='0002');
+load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0003_utf8' into table site_segment partition (part='0003');
+load data local inpath '/home/bd/gogo/site_query_segment/site_query_segment_0004_utf8' into table site_segment partition (part='0004');
 //向segment进行行转列
 create table site_word_1 as select site,word from site_segment lateral view explode(split(trim(segment),' ')) segment as word;
 //保留site_word_1词长大于1的
@@ -29,7 +31,9 @@ create table site_word_count_top5 as select site,word,count from (select site,wo
 //将列转行,生成最终结果集
 create table site_wordList as select site,concat_ws(',',collect_set(word)) as wordList from site_word_count_top5 group by site;
 //将非法site过滤
-create table site_wordList_2 select site,wordList from site_wordList where site rlike '^[0-9a-z]+.[a-z]+$';
+create table site_wordList_2 as select site,wordList from site_wordList where site rlike '^[0-9a-z]+.[a-z]+$';
+//过滤掉色情site
+create table site_wordList_3 as select a.site,a.wordList from site_wordList_2 a where a.site not in (select b.site from site_yellowwordSet b);
 //将site_wordList随机采样100行(每个Map采样100)左右,效果不太好
 //create table site_wordList_sample as select site,wordList from site_wordList_2 tablesample(50 rows);
 //使用rand()来进行随机抽样
