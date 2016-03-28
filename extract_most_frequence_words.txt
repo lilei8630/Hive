@@ -32,6 +32,9 @@ create table site_word_count_top5 as select site,word,count from (select site,wo
 create table site_wordSet_more_then_5 as select site,collect_set(word) as wordSet from site_word_count_top5 group by site having size(wordSet) = 5;
 //将集合转换成字符串生成结果集
 create table site_wordList_equals_5 as select site,concat_ws(',',wordSet) as wordList from site_wordSet_more_then_5;
+//生成最终结果集
+create table site_wordList_sample_ver3 as select site,wordList from ( select site, wordList,cast(rand() * 3000000 as int) as idx from site_wordList_equals_5 order by idx) vt limit 200;
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample_ver3' row format delimited fields terminated by '\t' select site,wordList from site_wordList_sample_ver3;
 //将列转行,生成最终结果集
 create table site_wordList as select site,concat_ws(',',collect_set(word)) as wordList from site_word_count_top5 group by site;
 //将非法site过滤
