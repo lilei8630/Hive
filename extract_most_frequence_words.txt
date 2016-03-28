@@ -43,6 +43,6 @@ INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList
 
 //下面用Word2Vec对site进行分类,首先site_word_count_2按照site进行聚合
 set hive.map.aggr = false;
-create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_3 group by site;
+create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_2 group by site;
 //安装wordSet的大小降序排列
 create table site_size_wordSet as select site,size(wordSet) size,wordSet from site_wordSet order by size desc;
