@@ -29,7 +29,9 @@ create table site_yellowwordSet as select site,collect_set(word) yellowwordSet f
 //查找site对应的word中最高查找的前5个词
 create table site_word_count_top5 as select site,word,count from (select site,word,count,row_number() over (distribute by site sort by count desc ) row_num from site_word_count_2) aa where aa.row_num <=5;
 //过滤掉查询词小于5的site
-create table site_wordSet_more_then_5 as select site,collect_set(word) as wordSet from site_word_count_top5 group by site where size(wordSet) = 5;
+create table site_wordSet_more_then_5 as select site,collect_set(word) as wordSet from site_word_count_top5 group by site having size(wordSet) = 5;
+//将集合转换成字符串生成结果集
+create table site_wordList_equals_5 as select site,concat_ws(',',wordSet) as wordList from site_wordSet_more_then_5;
 //将列转行,生成最终结果集
 create table site_wordList as select site,concat_ws(',',collect_set(word)) as wordList from site_word_count_top5 group by site;
 //将非法site过滤
@@ -42,7 +44,6 @@ create table site_wordList_3 as select a.site,a.wordList from site_wordList_2 a 
 create table site_wordList_sample as select site,wordList from ( select site, wordList,cast(rand() * 3000000 as int) as idx from site_wordList_3 order by idx) vt limit 200;
 //将样本文件输出到本地
 INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample' row format delimited fields terminated by '\t' select site,wordList from site_wordList_sample;
-
 //下面用Word2Vec对site进行分类,首先site_word_count_2按照site进行聚合
 set hive.map.aggr = false;
 create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_2 group by site;
