@@ -36,10 +36,14 @@ create table yellowSite as select a.site,a.word from site_word_3 a where a.word 
 create table site_yellowwordSet as select site,collect_set(word) yellowwordSet from yellowSite group by site;
 //过滤掉色情site
 create table site_wordList_3 as select a.site,a.wordList from site_wordList_2 a where a.site not in (select b.site from site_yellowwordSet b);
-//使用rand()来进行随机抽样
+//使用rand()来对site_wordList_3进行随机抽样
 create table site_wordList_sample as select site,wordList from ( select site, wordList,cast(rand() * 3000000 as int) as idx from site_wordList_3 order by idx) vt limit 200;
 //将样本文件输出到本地
 INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_sample_ver4' row format delimited fields terminated by '\t' select site,wordList from site_wordList_sample;
+//使用rand()来对site_yellowwordSet进行随机抽样
+create table site_yellowwordSet_sample as select site from (select site,cast(rand()*3000000 as int) as idx from site_yellowwordSet order by idx) vt limit 200;
+//将样本文件保存到本地
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_yellowwordSet_sample_ver1' row format delimited fields terminated by '\t' select site from site_yellowwordSet_sample;
 //下面用Word2Vec对site进行分类,首先site_word_count_2按照site进行聚合
 set hive.map.aggr = false;
 create table site_wordSet as select site,collect_set(word) wordSet from site_word_count_2 group by site;
