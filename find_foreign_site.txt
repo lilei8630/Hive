@@ -1,2 +1,13 @@
-a
+//对site_word_count_2表统计site查询词中英文词所占的比例
+//step1:统计一个site查询词的总数
+create table site_totalNum as select site,sum(count) as totalNum from site_word_count_2 group by site;
+//step2:统计一个site中文词的总数
+create table site_chineseWord_count as select site,word as chineseWord,count from site_word_count_2 where word rlike '[\\u4e00-\\u9fa5]+';
+//计算一个site中文词的总数,site_chineseNum大小为2847071
+create table site_chineseNum as select site,sum(count) as chineseNum from site_chineseWord_count group by site;
+//统计一个site英文词总数
+create table site_englishWord_count as select site,word as englishWord,count from site_word_count_2 where word rlike '^[\\uff41-\\uff5a]+$';
+//计算一个site中英文词总数,site_englishNum大小为1608739
+create table site_englishNum as select site,sum(count) as englishNum from site_englishWord_count group by site;
+//统计一个site中数字查询词的总数
 
