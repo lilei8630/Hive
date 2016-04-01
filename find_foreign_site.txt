@@ -21,8 +21,9 @@ create table site_pornNum as select site,sum(count) as pornNum from site_pornWor
 create table site_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.site,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from site_totalNum a left outer join site_chineseNum b on (a.site = b.site) left outer join site_englishNum c on (a.site = c.site) left outer join site_digitalNum d on (a.site = d.site) left outer join site_pornNum e on (a.site = e.site);
 //将site_totalNum_chineseNum_englishNum_digitalNum_pornNum转化成百分比形式
 create table site_chinesePercent_englishPercent_digitalPercent_pornPercent as select site, if(chineseNum is NULL,0.0,chineseNum/totalNum) as chinesePercent,if(englishNum is NULL,0.0,englishNum/totalNum) as englishPercent,if(digitalNum is NULL,0.0,digitalNum/totalNum) as digitalPercent,if(pornNum is NULL,0.0,pornNum/totalNum) as pornPercent from site_totalNum_chineseNum_englishNum_digitalNum_pornNum;
-
-
+//对site_chinesePercent_englishPercent_digitalPercent_pornPercent 和 site_totalNum_chineseNum_englishNum_digitalNum_pornNum 过滤掉非法site
+create table site_chinesePercent_englishPercent_digitalPercent_pornPercent_2 as select site,chinesePercent,englishPercent,digitalPercent,pornPercent from site_chinesePercent_englishPercent_digitalPercent_pornPercent where site rlike '^[0-9a-z]+.[a-z]+$';
+create table site_totalNum_chineseNum_englishNum_digitalNum_pornNum_2 as select site,totalNum,chineseNum,englishNum,digitalNum,pornNum from site_totalNum_chineseNum_englishNum_digitalNum_pornNum wheresite rlike '^[0-9a-z]+.[a-z]+$';
 
 
 
