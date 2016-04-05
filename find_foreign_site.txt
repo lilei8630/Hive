@@ -34,3 +34,5 @@ create table foreignSite as select site,englishPercent from site_chinesePercent_
 //将foreignSite随机抽取200条，并验证准确率
 create table foreignSite_sample as select site,englishPercent from (select site,englishPercent,cast(rand()*500000 as int) as idx from foreignSite order by idx) vt limit 200;
 //将foreignSite_sample导出hive
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/foreignSite_sample_ver1' row format delimited fields terminated by '\t' select site,englishPercent from foreignSite_sample;
+
