@@ -15,16 +15,16 @@ create table site_digitalWord_count as select site,word as digitalWord ,count fr
 create table site_digitalNum as select site,sum(count) as digitalNum from site_digitalWord_count group by site; 
 //统计一个site对应的色情词总数
 create table site_pornWord_count as select a.site,a.word as pornWord,a.count from site_word_count_2 a where a.word in (select b.yellowword from yellowwords b);
-//计算一个site包含色情词的总数,518835
+//计算一个site包含色情词的总数,1037906
 create table site_pornNum as select site,sum(count) as pornNum from site_pornWord_count group by site;
 //对site_totalNum,site_chineseNum,site_englishNum,site_digitalNum,site_pornNum进程5表join
 create table site_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.site,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from site_totalNum a left outer join site_chineseNum b on (a.site = b.site) left outer join site_englishNum c on (a.site = c.site) left outer join site_digitalNum d on (a.site = d.site) left outer join site_pornNum e on (a.site = e.site);
-//过滤掉totalNum小于50或者是非法site.
+//过滤掉totalNum小于4或者是非法site.
 create table site_totalNum_chineseNum_englishNum_digitalNum_pornNum_2 as select site,totalNum,chineseNum,englishNum,digitalNum,pornNum from site_totalNum_chineseNum_englishNum_digitalNum_pornNum where site rlike '^[0-9a-z]+.[a-z]+$' and totalNum > 4;
 //将site_totalNum_chineseNum_englishNum_digitalNum_pornNum转化成百分比形式
 create table site_chinesePercent_englishPercent_digitalPercent_pornPercent as select site, if(chineseNum is NULL,0.0,chineseNum/totalNum) as chinesePercent,if(englishNum is NULL,0.0,englishNum/totalNum) as englishPercent,if(digitalNum is NULL,0.0,digitalNum/totalNum) as digitalPercent,if(pornNum is NULL,0.0,pornNum/totalNum) as pornPercent from site_totalNum_chineseNum_englishNum_digitalNum_pornNum_2;
-//得到pornPercent > 0.3的所有site,并验证色情网站识别的准确率
-create table pornSite_pornPercent as select site,pornPercent from site_chinesePercent_englishPercent_digitalPercent_pornPercent where pornPercent > 0.3;
+//得到pornPercent > 0.08的所有site,并验证色情网站识别的准确率
+create table pornSite_pornPercent as select site,pornPercent from site_chinesePercent_englishPercent_digitalPercent_pornPercent where pornPercent > 0.1;
 //对pornSite随机抽取200条，并验证准确率
 create table pornSite_pornPercent_sample as select site,pornPercent from (select site,pornPercent,cast(rand()*500000 as int) as idx from pornSite_pornPercent order by idx) vt limit 200;
 //将pornSite_pornPercent_sample导出hive
@@ -35,11 +35,15 @@ create table foreignSite as select site,englishPercent from site_chinesePercent_
 create table foreignSite_sample as select site,englishPercent from (select site,englishPercent,cast(rand()*500000 as int) as idx from foreignSite order by idx) vt limit 200;
 //将foreignSite_sample导出hive
 INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/foreignSite_sample_ver1' row format delimited fields terminated by '\t' select site,englishPercent from foreignSite_sample;
+//寻找gamble网站，即digitalPercent > 0.4
+create table gambleSite_digitalPercent as select site,digitalPercent from site_chinesePercent_englishPercent_digitalPercent_pornPercent where digitalPercent > 0.4;
 //对site_wordList_2过滤掉色情site 
 create table site_wordList_drop_porn as select a.site,a.wordList from site_wordList_2 a where a.site not in (select b.site from pornSite_pornPercent b);
 //对site_wordList_drop_porn过滤掉外文site 
 create table site_wordList_drop_porn_foreign as select a.site,a.wordList from site_wordList_drop_porn a where a.site not in (select b.site from foreignSite b);
-//对site_wordList_drop_porn_foreign进行抽样，验证准确率。
-create table site_wordList_drop_porn_foreign_sample as select site,wordList from (select site,wordList,cast(rand()*5000000 as int) as idx from site_wordList_drop_porn_foreign order by idx) vt limit 200;
+//过滤掉gamble的网站,进行三重过滤后，site_wordList_drop_porn_foreign_gamble的大小为：1129803
+create table site_wordList_drop_porn_foreign_gamble as select a.site,a.wordList from site_wordList_drop_porn_foreign a where a.site not in (select b.site from gambleSite_digitalPercent b); 
+//对site_wordList_drop_porn_foreign_gamble进行抽样，验证准确率。
+create table site_wordList_drop_porn_foreign_gamble_sample as select site,wordList from (select site,wordList,cast(rand()*5000000 as int) as idx from site_wordList_drop_porn_foreign_gamble order by idx) vt limit 200;
 //将site_wordList_drop_porn_foreign_sample导出hive
-INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_drop_porn_foreign_ver1' row format delimited fields terminated by '\t' select site,wordList from site_wordList_drop_porn_foreign_sample;
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_drop_porn_foreign_gamble_ver1' row format delimited fields terminated by '\t' select site,wordList from site_wordList_drop_porn_foreign_gamble_sample;
