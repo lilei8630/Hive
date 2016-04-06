@@ -1,0 +1,5 @@
+*****利用site_segment寻找site的pv,并过滤pv低的site******
+//统计pv
+create table site_pv as select site,count(segment) as pv from site_segment group by site;
+//过滤掉非法site 
+create table site_pv_2 as select site,pv from site_pv where site rlike '^[0-9a-z]+.[a-z]+$' and site !='' and site != 'com.cn' and site != 'edu.cn';
