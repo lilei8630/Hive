@@ -45,5 +45,8 @@ create table site_wordList_drop_porn_foreign as select a.site,a.wordList from si
 create table site_wordList_drop_porn_foreign_gamble as select a.site,a.wordList from site_wordList_drop_porn_foreign a where a.site not in (select b.site from gambleSite_digitalPercent b); 
 //对site_wordList_drop_porn_foreign_gamble进行抽样，验证准确率。
 create table site_wordList_drop_porn_foreign_gamble_sample as select site,wordList from (select site,wordList,cast(rand()*5000000 as int) as idx from site_wordList_drop_porn_foreign_gamble order by idx) vt limit 200;
-//将site_wordList_drop_porn_foreign_sample导出hive
+//将site_wordList_drop_porn_foreign_sample导出hive,经过评测，准确率为84.8%
 INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_drop_porn_foreign_gamble_ver1' row format delimited fields terminated by '\t' select site,wordList from site_wordList_drop_porn_foreign_gamble_sample;
+//将site_wordList_drop_porn_foreign_gamble导出hive
+INSERT OVERWRITE LOCAL DIRECTORY '/home/bd/gogo/site_query_segment/site_wordList_drop_porn_foreign_gamble' row format delimited fields terminated by '\t' select site,wordList from site_wordList_drop_porn_foreign_gamble;
+
