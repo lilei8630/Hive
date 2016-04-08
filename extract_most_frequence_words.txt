@@ -1,5 +1,5 @@
-//从hive中抽取query和url
-select query,click.url from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2015120101' and logdate <= '2015120102' and clean_state = 'OK' and page_type = 'RESULTPAGE' limit 200;
+//从hive中抽取query和url(2016021501-2016040801)
+create table host_query as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016021501' and logdate <= '2016040801' and clean_state = 'OK' and page_type = 'RESULTPAGE';
 //创建site-segment表
 create table site_segment(site string,segment string) partitioned by (part string) row format delimited fields terminated by '\t' stored as textfile;
 //向site_segment表添加数据,500G左右
