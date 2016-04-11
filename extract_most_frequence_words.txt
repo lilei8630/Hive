@@ -1,7 +1,7 @@
 //从hive中抽取query和url(2016010101-20160401101)
 create table host_query as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016010101' and logdate <= '2016041101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
 //测试正则
-select "哈哈第三方 mp.weixin.qq.com 你好" rlike '^([0-9a-z]+.){2,7}$';
+select "mp.weixin.qq.com" rlike '^([0-9a-z]+.){2,7}$';
 
 //去除host_query中非法的host
 create table host_query_3 as select host,trim(query) as query from host_query_2 where host rlike '^([0-9a-z]+.){2,7}$'; 
