@@ -1,9 +1,16 @@
-//从hive中抽取query和url(2016021501-2016040801),为8599635364个记录
-create table host_query as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016021501' and logdate <= '2016040801' and clean_state = 'OK' and page_type = 'RESULTPAGE';
-//去除host_query表中host为NULL的记录，为8486298447个记录。
-create table host_query_2 as select host,query from host_query where host is not NULL;
-//去除host_query_2中重复的行,为1940131115个记录。
-create table host_query_3 as select host,query from (select host,query,row_number() over (distribute by host,query sort by host,query) as row_number from host_query_2) tt where row_number = 1;
+//从hive中抽取query和url(2016010101-20160401101)
+create table host_query as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016010101' and logdate <= '2016041101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
+//测试正则
+select "哈哈第三方 mp.weixin.qq.com 你好" rlike '^([0-9a-z]+.){2,7}$';
+
+//去除host_query中非法的host
+create table host_query_3 as select host,trim(query) as query from host_query_2 where host rlike '^([0-9a-z]+.){2,7}$'; 
+//去除host_query_3中重复的行,1936900384
+create table host_query_distinct as select host,query from (select host,query,row_number() over (distribute by host,query sort by host,query) as row_number from host_query_3) tt where row_number = 1;
+//抽取所有不同的query进行分词,786305971
+create table query as select distinct query from host_query_distinct;
+//抽取所有不同的host 
+create table host as select distinct host from host_query_distinct;
 //创建site-segment表
 create table site_segment(site string,segment string) partitioned by (part string) row format delimited fields terminated by '\t' stored as textfile;
 //向site_segment表添加数据,500G左右
