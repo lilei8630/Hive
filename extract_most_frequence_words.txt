@@ -1,7 +1,25 @@
-//从hive中抽取query和url(2016010101-20160401101)
-create table host_query as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016010101' and logdate <= '2016041101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
+//从hive中抽取query和url(2016010101-2016041001)
+create table host_query_month_1 as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate >= '2016010101' and logdate <= '2016020101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
+create table host_query_month_2 as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate > '2016020101' and logdate <= '2016030101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
+create table host_query_month_3 as select parse_url(click.url,'HOST') as host,query from custom.common_wap_pv lateral view explode(click_result) click_result as click where logdate > '2016030101' and logdate <= '2016040101' and clean_state = 'OK' and page_type = 'RESULTPAGE';
 //去除host_query中非法的host
-create table host_query_2 as select host,query from host_query where host rlike '^([0-9a-z]+.){2,7}$'; 
+create table host_query_month_1_valid as select host,query from host_query_month_1 where host rlike '^([0-9a-zA-Z\-\$_\+!\*()]+\.){1,6}[0-9a-zA-Z]+$'; 
+create table host_query_month_2_valid as select host,query from host_query_month_2 where host rlike '^([0-9a-zA-Z\-\$_\+!\*()]+\.){1,6}[0-9a-zA-Z]+$'; 
+create table host_query_month_3_valid as select host,query from host_query_month_3 where host rlike '^([0-9a-zA-Z\-\$_\+!\*()]+\.){1,6}[0-9a-zA-Z]+$';
+//将host_query_month_1_valid host_query_month_2_valid host_query_month_3_valid 存到同一个表中,13117457774
+create table host_query(host string,query string) partitioned by (month string) row format delimited fields terminated by '\t' stored as textfile;
+//将host_query_month_1_valid插入到host_query partition = 1处
+insert into table host_query partition (month = '1')select host,query from host_query_month_1_valid;
+//将host_query_month_2_valid插入到host_query partition = 2处
+insert into table host_query partition (month = '2')select host,query from host_query_month_2_valid;
+//将host_query_month_3_valid插入到host_query partition = 3处
+insert into table host_query partition (month = '3')select host,query from host_query_month_3_valid;
+//得到host_query表中所有不同的query,1109559359
+create table queries as select distinct query from host_query;
+//给queries添加唯一行号,还没有结果
+create table rn_query as select row_number() over (order by query desc) as rn,query from queries;
+//得到host_query表中所有不同的host 
+create table hosts as select distinct host from host_query;
 //去除host_query_3中重复的行,1936900384
 create table host_query_distinct as select host,query from (select host,query,row_number() over (distribute by host,query sort by host,query) as row_number from host_query_3) tt where row_number = 1;
 //抽取所有不同的query进行分词,786305971
