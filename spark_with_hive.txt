@@ -4,3 +4,5 @@ create table host_domain_segment(host string,domain string,segment string) parti
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2015120801_2015121801' into table host_domain_segment partition (part='20151208_20151218');
 //向host_domain_segment插入20151218-20151228的数据
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2015121801_2015122801' into table host_domain_segment partition (part='20151218_20151228');
+//向host_domain_segment插入20160108-20160118的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016010801_2016011801' into table host_domain_segment partition (part='20160108_20160118');
