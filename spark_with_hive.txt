@@ -1,0 +1,5 @@
+//创建host_domain_segment
+create table host_domain_segment(host string,domain string,segment string) partitioned by (part string) row format delimited fields terminated by '\t' stored as textfile;
+//向host_domain_segment插入20151208-20151218的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2015120801_2015121801' into table host_domain_segment partition (part='20151208_20151218');
+
