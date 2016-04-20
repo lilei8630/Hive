@@ -1,0 +1,14 @@
+//创建weibo表
+create table weibo(uid string,time string,segment string) partitioned by (part string) row format delimited fields terminated by '\t' stored as textfile;
+//load数据
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0000' into table weibo partition (part='0000');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0001' into table weibo partition (part='0001');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0002' into table weibo partition (part='0002');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0003' into table weibo partition (part='0003');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0004' into table weibo partition (part='0004');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0005' into table weibo partition (part='0005');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0006' into table weibo partition (part='0006');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0007' into table weibo partition (part='0007');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0008' into table weibo partition (part='0008');
+load data local inpath '/mnt/sdb1/weibo/segment/uid_time_content_0010' into table weibo partition (part='0010');
+
