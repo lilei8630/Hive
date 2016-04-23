@@ -16,4 +16,11 @@ load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016020801_2016021801' into table host_domain_segment partition (part='20160208_20160218');
 //向host_domain_segment插入20160218_20160228的数据
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016021801_2016022801' into table host_domain_segment partition (part='20160218_20160228');
-
+//向host_domain_segment插入20160228_20160308的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016022801_2016030801' into table host_domain_segment partition (part='20160228_20160308');
+//向host_domain_segment插入20160308_20160318的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016030801_2016031801' into table host_domain_segment partition (part='20160308_20160318');
+//向host_domain_segment插入20160318_20160328的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016031801_2016032801' into table host_domain_segment partition (part='20160318_20160328');
+//向host_domain_segment插入20160328_20160408的数据
+load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016032801_2016040801' into table host_domain_segment partition (part='20160328_20160408');
