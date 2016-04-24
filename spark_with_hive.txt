@@ -24,3 +24,40 @@ load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016031801_2016032801' into table host_domain_segment partition (part='20160318_20160328');
 //向host_domain_segment插入20160328_20160408的数据
 load data local inpath '/search/odin/lilei/tagURL/spark/host_domain_segment/host_domain_segment_2016032801_2016040801' into table host_domain_segment partition (part='20160328_20160408');
+//向segment进行行转列
+create table host_domain_word as select host,domain,word from host_domain_segment lateral view explode(split(trim(segment),' ')) segment as word;
+//保留site_word_1词长大于1的
+create table host_domain_word_2 as select host,domain,word from host_domain_word where length(word)>1;
+//将host_domain_word_2按照host、word分组,并统计word的个数再降序排列
+create table host_word_count as select host,word,count(word) as count from host_domain_word_2 group by host,word order by count desc;
+//创建stopwords表
+create table stopwords(stopword string) row format delimited fields terminated by '\t' stored as textfile;
+load data local inpath '/search/odin/lilei/tagURL/spark/stopwords.txt' into table stopwords;
+//创建色情词包
+create table yellowwords(yellowword string) row format delimited fields terminated by '\t' stored as textfile;
+load data local inpath '/search/odin/lilei/tagURL/spark/yellow.txt' into table yellowwords;
+//去除停用词,不同的host为11778648。
+create table host_word_count_2 as select a.host,a.word,a.count from host_word_count a where a.word not in (select b.stopword from stopwords b );
+//对host_word_count_2表统计site查询词中英文词所占的比例
+//统计一个host查询词的总数,11778648
+create table host_totalNum as select host,sum(count) as totalNum from host_word_count_2 group by host;
+//统计一个host中文词的总数
+create table host_chineseWord_count as select host,word as chineseWord,count from host_word_count_2 where word rlike '[\\u4e00-\\u9fa5]+';
+//计算一个host中文词的总数,10178676
+create table host_chineseNum as select host,sum(count) as chineseNum from host_chineseWord_count group by host;
+//统计一个host英文词总数
+create table host_englishWord_count as select host,word as englishWord,count from host_word_count_2 where word rlike '^[\\uff41-\\uff5a]+$';
+//计算一个host中英文词总数,3640136
+create table host_englishNum as select host,sum(count) as englishNum from host_englishWord_count group by host;
+//统计一个host中数字查询词的总数
+create table host_digitalWord_count as select host,word as digitalWord ,count from host_word_count_2 where word rlike '^[\\uff10-\\uff19]+$';
+//计算一个host中包含数字的个数,2305918
+create table host_digitalNum as select host,sum(count) as digitalNum from host_digitalWord_count group by host; 
+//统计一个host对应的色情词总数
+create table host_pornWord_count as select a.host,a.word as pornWord,a.count from host_word_count_2 a where a.word in (select b.yellowword from yellowwords b);
+//计算一个host包含色情词的总数,2812504
+create table host_pornNum as select host,sum(count) as pornNum from host_pornWord_count group by host;
+//对host_totalNum,host_chineseNum,host_englishNum,host_digitalNum,host_pornNum进程5表join
+create table host_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.host,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from host_totalNum a left outer join host_chineseNum b on (a.host = b.host) left outer join host_englishNum c on (a.host = c.host) left outer join host_digitalNum d on (a.host = d.host) left outer join host_pornNum e on (a.host = e.host);
+//将host_totalNum_chineseNum_englishNum_digitalNum_pornNum转化成百分比形式
+create table host_chinesePercent_englishPercent_digitalPercent_pornPercent as select site, if(chineseNum is NULL,0.0,chineseNum/totalNum) as chinesePercent,if(englishNum is NULL,0.0,englishNum/totalNum) as englishPercent,if(digitalNum is NULL,0.0,digitalNum/totalNum) as digitalPercent,if(pornNum is NULL,0.0,pornNum/totalNum) as pornPercent from host_totalNum_chineseNum_englishNum_digitalNum_pornNum;
