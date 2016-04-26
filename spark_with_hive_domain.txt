@@ -25,3 +25,12 @@ create table domain_pornNum as select domain,sum(count) as pornNum from domain_p
 create table domain_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.domain,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from domain_totalNum a left outer join domain_chineseNum b on (a.domain = b.domain) left outer join domain_englishNum c on (a.domain = c.domain) left outer join domain_digitalNum d on (a.domain = d.domain) left outer join domain_pornNum e on (a.domain = e.domain);
 //将domain_totalNum_chineseNum_englishNum_digitalNum_pornNum转化成百分比形式
 create table domain_chinesePercent_englishPercent_digitalPercent_pornPercent as select domain, if(chineseNum is NULL,0.0,chineseNum/totalNum) as chinesePercent,if(englishNum is NULL,0.0,englishNum/totalNum) as englishPercent,if(digitalNum is NULL,0.0,digitalNum/totalNum) as digitalPercent,if(pornNum is NULL,0.0,pornNum/totalNum) as pornPercent from domain_totalNum_chineseNum_englishNum_digitalNum_pornNum;
+//得到pornPercent > 0.1的所有domain,并验证色情网站识别的准确率
+create table pornDomain_pornPercent as select domain,pornPercent from domain_chinesePercent_englishPercent_digitalPercent_pornPercent where pornPercent > 0.1;
+//寻找外文的domain集合
+create table foreignDomain as select domain,englishPercent from domain_chinesePercent_englishPercent_digitalPercent_pornPercent where englishPercent > 0.4;
+//寻找gamble网站，即digitalPercent > 0.4
+create table gambleDomain_digitalPercent as select domain,digitalPercent from domain_chinesePercent_englishPercent_digitalPercent_pornPercent where digitalPercent > 0.4;
+//查找domain对应的word中最高查找的前5个词
+create table domain_word_count_top5 as select domain,word,count from (select domain,word,count,row_number() over (distribute by domain sort by count desc ) row_num from domain_word_count_2) aa where aa.row_num <=5;
+
