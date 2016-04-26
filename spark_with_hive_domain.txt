@@ -1,0 +1,26 @@
+//将host_domain_word_2按照domain、word分组,并统计word的个数再降序排列
+create table domain_word_count as select domain,word,count(word) as count from host_domain_word_2 group by domain,word order by count desc;
+//去除停用词,不同的domain为4381111。
+create table domain_word_count_2 as select a.domain,a.word,a.count from domain_word_count a where a.word not in (select b.stopword from stopwords b );
+//对domain_word_count_2表统计domain查询词中英文词所占的比例
+//统计一个domain查询词的总数
+create table domain_totalNum as select domain,sum(count) as totalNum from domain_word_count_2 group by domain;
+//统计一个host中文词的总数
+create table domain_chineseWord_count as select domain,word as chineseWord,count from domain_word_count_2 where word rlike '[\\u4e00-\\u9fa5]+';
+//计算一个domain中文词的总数,3468665
+create table domain_chineseNum as select domain,sum(count) as chineseNum from domain_chineseWord_count group by domain;
+//统计一个domain英文词总数
+create table domain_englishWord_count as select domain,word as englishWord,count from domain_word_count_2 where word rlike '^[\\uff41-\\uff5a]+$';
+//计算一个domain中英文词总数,2058652
+create table domain_englishNum as select domain,sum(count) as englishNum from domain_englishWord_count group by domain;
+//统计一个domain中数字查询词的总数
+create table domain_digitalWord_count as select domain,word as digitalWord ,count from domain_word_count_2 where word rlike '^[\\uff10-\\uff19]+$';
+//计算一个domain包含数字的个数,1157607
+create table domain_digitalNum as select domain,sum(count) as digitalNum from domain_digitalWord_count group by domain; 
+//统计一个domain对应的色情词总数
+create table domain_pornWord_count as select a.domain,a.word as pornWord,a.count from domain_word_count_2 a where a.word in (select b.yellowword from yellowwords b);
+//计算一个host包含色情词的总数,1299380
+create table domain_pornNum as select domain,sum(count) as pornNum from domain_pornWord_count group by domain;
+//对domain_totalNum,domain_chineseNum,domain_englishNum,domain_digitalNum,domain_pornNum进程5表join
+create table domain_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.domain,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from domain_totalNum a left outer join domain_chineseNum b on (a.domain = b.domain) left outer join domain_englishNum c on (a.domain = c.domain) left outer join domain_digitalNum d on (a.domain = d.domain) left outer join domain_pornNum e on (a.domain = e.domain);
+
