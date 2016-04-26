@@ -23,4 +23,5 @@ create table domain_pornWord_count as select a.domain,a.word as pornWord,a.count
 create table domain_pornNum as select domain,sum(count) as pornNum from domain_pornWord_count group by domain;
 //对domain_totalNum,domain_chineseNum,domain_englishNum,domain_digitalNum,domain_pornNum进程5表join
 create table domain_totalNum_chineseNum_englishNum_digitalNum_pornNum as select a.domain,a.totalNum,b.chineseNum,c.englishNum,d.digitalNum,e.pornNum from domain_totalNum a left outer join domain_chineseNum b on (a.domain = b.domain) left outer join domain_englishNum c on (a.domain = c.domain) left outer join domain_digitalNum d on (a.domain = d.domain) left outer join domain_pornNum e on (a.domain = e.domain);
-
+//将domain_totalNum_chineseNum_englishNum_digitalNum_pornNum转化成百分比形式
+create table domain_chinesePercent_englishPercent_digitalPercent_pornPercent as select domain, if(chineseNum is NULL,0.0,chineseNum/totalNum) as chinesePercent,if(englishNum is NULL,0.0,englishNum/totalNum) as englishPercent,if(digitalNum is NULL,0.0,digitalNum/totalNum) as digitalPercent,if(pornNum is NULL,0.0,pornNum/totalNum) as pornPercent from domain_totalNum_chineseNum_englishNum_digitalNum_pornNum;
